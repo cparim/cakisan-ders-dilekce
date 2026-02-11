@@ -17,14 +17,14 @@
     .card { border:1px solid #ddd; padding: 12px; border-radius: 10px; margin-top: 12px; }
 
     .inline { display:flex; gap:10px; align-items:flex-end; flex-wrap: wrap; }
-    .inline > div { flex:1; min-width: 260px; }
+    .inline > div { flex:1; min-width: 210px; }
 
     .ders-header { font-weight: 700; margin-bottom: 6px; }
     .ders-block { border:1px solid #e3e3e3; border-radius: 10px; overflow:hidden; margin-top: 10px; }
-    .ders-block .row { display:grid; grid-template-columns: 1fr 260px; }
+    .ders-block .row { display:grid; grid-template-columns: 1fr 180px 220px 180px; }
     .ders-block .cell { padding: 10px; border-top:1px solid #eee; }
     .ders-block .row:first-child .cell { border-top:none; }
-    .ders-block .cell.right { border-left:1px solid #eee; }
+    .ders-block .cell + .cell { border-left:1px solid #eee; }
     .ders-block .title { font-size: 12px; color:#666; margin-bottom: 6px; }
     .ders-actions { display:flex; justify-content:flex-end; padding: 8px 10px; border-top:1px solid #eee; background:#fafafa; }
   </style>
@@ -32,12 +32,10 @@
 <body>
 
   <h2>Çakışan Ders Mazeret Dilekçesi</h2>
-  <p class="small">Formu gönderince yeni sekmede PDF dilekçeniz indirilecektir.</p>
+  <p class="small">Formu gönderince PDF dilekçeniz indirilecektir.</p>
 
-  <form id="frm"
-        method="POST"
-        action="https://script.google.com/macros/s/AKfycbw8PwVfCZASdF94vqXsdnKzCP-wsV2PgJf2C7f4a3MNLr6-JxVmMJaly3I7mQSP7vRH8g/exec"
-        target="_self">
+  <!-- BURASI VERCEL API OLACAK (Drive değil) -->
+  <form id="frm">
 
     <label>Ad</label>
     <input type="text" name="ad" id="ad" required>
@@ -68,22 +66,38 @@
         <div class="inline">
           <div>
             <label style="margin-top:0;">Alınan Dersin Adı ve Kodu</label>
-            <input type="text" id="alinan_ad_kod" placeholder="Örn: IST1141 İstatistik">
+            <input type="text" id="alinan_ad_kod" placeholder="Örn: IST1141 İstatistik" />
+          </div>
+          <div>
+            <label style="margin-top:0;">Grup</label>
+            <input type="text" id="alinan_grup" placeholder="Örn: 1 / A" />
+          </div>
+          <div>
+            <label style="margin-top:0;">Dersin Hocası</label>
+            <input type="text" id="alinan_hoca" placeholder="Örn: Dr. X" />
           </div>
           <div>
             <label style="margin-top:0;">Tarih / Saat</label>
-            <input type="text" id="alinan_tarih_saat" placeholder="Örn: 12.02.2026 / 10:00">
+            <input type="text" id="alinan_tarih_saat" placeholder="Örn: 12.02.2026 / 10:00" />
           </div>
         </div>
 
         <div class="inline">
           <div>
             <label>Çakışan Ders Adı ve Kodu</label>
-            <input type="text" id="cakisan_ad_kod" placeholder="Örn: MAT1001 Matematik">
+            <input type="text" id="cakisan_ad_kod" placeholder="Örn: MAT1001 Matematik" />
+          </div>
+          <div>
+            <label>Grup</label>
+            <input type="text" id="cakisan_grup" placeholder="Örn: 2 / B" />
+          </div>
+          <div>
+            <label>Dersin Hocası</label>
+            <input type="text" id="cakisan_hoca" placeholder="Örn: Prof. Y" />
           </div>
           <div>
             <label>Tarih / Saat</label>
-            <input type="text" id="cakisan_tarih_saat" placeholder="Örn: 12.02.2026 / 10:00">
+            <input type="text" id="cakisan_tarih_saat" placeholder="Örn: 12.02.2026 / 10:00" />
           </div>
         </div>
 
@@ -97,34 +111,42 @@
       </div>
     </div>
 
-    <!-- Apps Script bunu okuyacak -->
-    <input type="hidden" name="dersler_json" id="dersler_json" value="[]">
-
     <div style="margin-top:16px;">
       <button class="btn btn-primary" type="submit">PDF Dilekçe Oluştur</button>
     </div>
   </form>
 
 <script>
+  // ✅ BURAYA KENDİ VERCEL URL'İNİ YAZ
+  const API_URL = "https://SENIN-VERCEL-URL.vercel.app/api/submit";
+  // İstersen API_KEY kullan (Vercel env'e koyarsın), yoksa boş bırak
+  const API_KEY = "";
+
   const dersBloklari = [];
 
   function dersBlokEkle() {
-    const alinanAdKod = document.getElementById("alinan_ad_kod").value.trim();
-    const alinanTarihSaat = document.getElementById("alinan_tarih_saat").value.trim();
-    const cakisanAdKod = document.getElementById("cakisan_ad_kod").value.trim();
-    const cakisanTarihSaat = document.getElementById("cakisan_tarih_saat").value.trim();
+    const b = {
+      alinanAdKod: document.getElementById("alinan_ad_kod").value.trim(),
+      alinanGrup: document.getElementById("alinan_grup").value.trim(),
+      alinanHoca: document.getElementById("alinan_hoca").value.trim(),
+      alinanTarihSaat: document.getElementById("alinan_tarih_saat").value.trim(),
 
-    if (!alinanAdKod || !cakisanAdKod) {
+      cakisanAdKod: document.getElementById("cakisan_ad_kod").value.trim(),
+      cakisanGrup: document.getElementById("cakisan_grup").value.trim(),
+      cakisanHoca: document.getElementById("cakisan_hoca").value.trim(),
+      cakisanTarihSaat: document.getElementById("cakisan_tarih_saat").value.trim(),
+    };
+
+    if (!b.alinanAdKod || !b.cakisanAdKod) {
       alert("En azından 'Alınan Dersin Adı ve Kodu' ve 'Çakışan Ders Adı ve Kodu' dolu olmalı.");
       return;
     }
 
-    dersBloklari.push({ alinanAdKod, alinanTarihSaat, cakisanAdKod, cakisanTarihSaat });
+    dersBloklari.push(b);
 
-    document.getElementById("alinan_ad_kod").value = "";
-    document.getElementById("alinan_tarih_saat").value = "";
-    document.getElementById("cakisan_ad_kod").value = "";
-    document.getElementById("cakisan_tarih_saat").value = "";
+    ["alinan_ad_kod","alinan_grup","alinan_hoca","alinan_tarih_saat",
+     "cakisan_ad_kod","cakisan_grup","cakisan_hoca","cakisan_tarih_saat"
+    ].forEach(id => document.getElementById(id).value = "");
 
     renderDersBloklari();
   }
@@ -148,21 +170,39 @@
             <div class="title">Alınan Dersin Adı ve Kodu</div>
             <div>${escapeHtml(b.alinanAdKod)}</div>
           </div>
-          <div class="cell right">
+          <div class="cell">
+            <div class="title">Grup</div>
+            <div>${escapeHtml(b.alinanGrup || "-")}</div>
+          </div>
+          <div class="cell">
+            <div class="title">Dersin Hocası</div>
+            <div>${escapeHtml(b.alinanHoca || "-")}</div>
+          </div>
+          <div class="cell">
             <div class="title">Tarih / Saat</div>
             <div>${escapeHtml(b.alinanTarihSaat || "-")}</div>
           </div>
         </div>
+
         <div class="row">
           <div class="cell">
             <div class="title">Çakışan Ders Adı ve Kodu</div>
             <div>${escapeHtml(b.cakisanAdKod)}</div>
           </div>
-          <div class="cell right">
+          <div class="cell">
+            <div class="title">Grup</div>
+            <div>${escapeHtml(b.cakisanGrup || "-")}</div>
+          </div>
+          <div class="cell">
+            <div class="title">Dersin Hocası</div>
+            <div>${escapeHtml(b.cakisanHoca || "-")}</div>
+          </div>
+          <div class="cell">
             <div class="title">Tarih / Saat</div>
             <div>${escapeHtml(b.cakisanTarihSaat || "-")}</div>
           </div>
         </div>
+
         <div class="ders-actions">
           <button type="button" class="btn btn-danger" onclick="dersBlokSil(${i})">Bu Bloğu Sil</button>
         </div>
@@ -179,12 +219,49 @@
       .replaceAll("'", "&#39;");
   }
 
-  document.getElementById("frm").addEventListener("submit", function(e){
-    document.getElementById("dersler_json").value = JSON.stringify(dersBloklari);
+  document.getElementById("frm").addEventListener("submit", async function(e){
+    e.preventDefault();
+
     if (dersBloklari.length === 0) {
       const ok = confirm("Hiç ders eklemediniz. Yine de devam edilsin mi?");
-      if (!ok) e.preventDefault();
+      if (!ok) return;
     }
+
+    const payload = {
+      ad: document.getElementById("ad").value.trim(),
+      soyad: document.getElementById("soyad").value.trim(),
+      ogrno: document.getElementById("ogrno").value.trim(),
+      mail: document.getElementById("mail").value.trim(),
+      telefon: document.getElementById("telefon").value.trim(),
+      bolum: document.getElementById("bolum").value.trim(),
+      aciklama: document.getElementById("aciklama").value.trim(),
+      dersler: dersBloklari
+    };
+
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(API_KEY ? {"X-API-Key": API_KEY} : {})
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      const txt = await res.text();
+      alert("Hata: " + txt);
+      return;
+    }
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Dilekce_${payload.ogrno || ""}_${payload.ad || ""}_${payload.soyad || ""}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   });
 
   renderDersBloklari();
