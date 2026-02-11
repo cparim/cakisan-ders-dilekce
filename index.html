@@ -5,17 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Çakışan Ders Dilekçe Formu</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 16px; max-width: 720px; margin: 0 auto; }
+    body { font-family: Arial, sans-serif; padding: 16px; max-width: 820px; margin: 0 auto; }
     label { font-weight: 600; display:block; margin-top: 12px; }
-    input, textarea, select { width: 100%; padding: 8px; box-sizing: border-box; margin-top: 6px; }
-    .row { display:flex; gap: 10px; align-items: end; }
-    .row > div { flex: 1; }
+    input, textarea { width: 100%; padding: 10px; box-sizing: border-box; margin-top: 6px; }
     .btn { padding: 10px 12px; cursor: pointer; }
     .btn-secondary { background:#eee; border:1px solid #ccc; }
     .btn-danger { background:#ffecec; border:1px solid #ffb3b3; }
-    .card { border:1px solid #ddd; padding: 12px; border-radius: 8px; margin-top: 12px; }
+    .card { border:1px solid #ddd; padding: 12px; border-radius: 10px; margin-top: 12px; }
     .small { font-size: 12px; color:#666; }
-    ul { margin: 8px 0 0 18px; }
+    .grid2 { display:grid; grid-template-columns: 1fr 260px; gap: 12px; }
+    .grid2 label { margin-top: 0; }
+    .ders-header { font-weight: 700; margin-bottom: 6px; }
+    .ders-block { border:1px solid #e3e3e3; border-radius: 10px; overflow:hidden; margin-top: 10px; }
+    .ders-block .row { display:grid; grid-template-columns: 1fr 260px; gap: 0; }
+    .ders-block .cell { padding: 10px; border-top:1px solid #eee; }
+    .ders-block .row:first-child .cell { border-top:none; }
+    .ders-block .cell.right { border-left:1px solid #eee; }
+    .ders-block .title { font-size: 12px; color:#666; margin-bottom: 6px; }
+    .ders-actions { display:flex; justify-content:flex-end; padding: 8px 10px; border-top:1px solid #eee; background:#fafafa; }
+    .inline { display:flex; gap:10px; align-items:flex-end; flex-wrap: wrap; }
+    .inline > div { flex:1; min-width: 220px; }
   </style>
 </head>
 <body>
@@ -49,21 +58,36 @@
     <label>Açıklama</label>
     <textarea name="aciklama" id="aciklama" rows="4"></textarea>
 
-    <!-- Dersler burada yönetilecek -->
+    <!-- Ders blokları -->
     <div class="card">
-      <h3 style="margin:0 0 8px 0;">Dersler</h3>
+      <div class="ders-header">Dersler</div>
+      <div class="small">“Ders Ekle” dediğinizde aşağıdaki bilgiler 2 satırlı bir blok olarak listeye eklenecek.</div>
 
-      <div class="row">
-        <div>
-          <label style="margin-top:0;">Ders Adı</label>
-          <input type="text" id="dersAdi" placeholder="Örn: Fizik I">
+      <div class="card" style="margin-top:12px;">
+        <div class="inline">
+          <div>
+            <label style="margin-top:0;">Alınan Dersin Adı ve Kodu</label>
+            <input type="text" id="alinan_ad_kod" placeholder="Örn: FIZ1001 Fizik I">
+          </div>
+          <div>
+            <label style="margin-top:0;">Tarih / Saat</label>
+            <input type="text" id="alinan_tarih_saat" placeholder="Örn: 12.02.2026 10:00">
+          </div>
         </div>
-        <div>
-          <label style="margin-top:0;">Saat / Tarih</label>
-          <input type="text" id="dersSaat" placeholder="Örn: 10:00 / 12.02.2026">
+
+        <div class="inline">
+          <div>
+            <label>Çakışan Ders Adı ve Kodu</label>
+            <input type="text" id="cakisan_ad_kod" placeholder="Örn: MAT1002 Matematik II">
+          </div>
+          <div>
+            <label>Tarih / Saat</label>
+            <input type="text" id="cakisan_tarih_saat" placeholder="Örn: 12.02.2026 10:00">
+          </div>
         </div>
-        <div style="flex:0;">
-          <button type="button" class="btn btn-secondary" onclick="dersEkle()">Ders Ekle</button>
+
+        <div style="margin-top:10px;">
+          <button type="button" class="btn btn-secondary" onclick="dersBlokEkle()">Ders Ekle</button>
         </div>
       </div>
 
@@ -81,39 +105,78 @@
   </form>
 
 <script>
-  const dersler = [];
+  // Artık dersler: blok objeleri
+  // { alinanAdKod, alinanTarihSaat, cakisanAdKod, cakisanTarihSaat }
+  const dersBloklari = [];
 
-  function renderDersler() {
+  function dersBlokEkle() {
+    const alinanAdKod = document.getElementById("alinan_ad_kod").value.trim();
+    const alinanTarihSaat = document.getElementById("alinan_tarih_saat").value.trim();
+    const cakisanAdKod = document.getElementById("cakisan_ad_kod").value.trim();
+    const cakisanTarihSaat = document.getElementById("cakisan_tarih_saat").value.trim();
+
+    if (!alinanAdKod || !cakisanAdKod) {
+      alert("En azından 'Alınan Dersin Adı ve Kodu' ve 'Çakışan Ders Adı ve Kodu' dolu olmalı.");
+      return;
+    }
+
+    dersBloklari.push({
+      alinanAdKod,
+      alinanTarihSaat,
+      cakisanAdKod,
+      cakisanTarihSaat
+    });
+
+    // temizle
+    document.getElementById("alinan_ad_kod").value = "";
+    document.getElementById("alinan_tarih_saat").value = "";
+    document.getElementById("cakisan_ad_kod").value = "";
+    document.getElementById("cakisan_tarih_saat").value = "";
+
+    renderDersBloklari();
+  }
+
+  function dersBlokSil(i) {
+    dersBloklari.splice(i, 1);
+    renderDersBloklari();
+  }
+
+  function renderDersBloklari() {
     const el = document.getElementById("dersListe");
-    if (dersler.length === 0) {
+    if (dersBloklari.length === 0) {
       el.innerHTML = "Henüz ders eklenmedi.";
       return;
     }
-    const items = dersler.map((d, i) =>
-      `<li>${escapeHtml(d)} <button type="button" class="btn btn-danger" onclick="dersSil(${i})">Sil</button></li>`
-    ).join("");
-    el.innerHTML = `<ul>${items}</ul>`;
-  }
 
-  function dersEkle() {
-    const ad = document.getElementById("dersAdi").value.trim();
-    const saat = document.getElementById("dersSaat").value.trim();
+    const blocks = dersBloklari.map((b, i) => `
+      <div class="ders-block">
+        <div class="row">
+          <div class="cell">
+            <div class="title">Alınan Dersin Adı ve Kodu</div>
+            <div>${escapeHtml(b.alinanAdKod)}</div>
+          </div>
+          <div class="cell right">
+            <div class="title">Tarih / Saat</div>
+            <div>${escapeHtml(b.alinanTarihSaat || "-")}</div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="cell">
+            <div class="title">Çakışan Ders Adı ve Kodu</div>
+            <div>${escapeHtml(b.cakisanAdKod)}</div>
+          </div>
+          <div class="cell right">
+            <div class="title">Tarih / Saat</div>
+            <div>${escapeHtml(b.cakisanTarihSaat || "-")}</div>
+          </div>
+        </div>
+        <div class="ders-actions">
+          <button type="button" class="btn btn-danger" onclick="dersBlokSil(${i})">Bu Bloğu Sil</button>
+        </div>
+      </div>
+    `).join("");
 
-    if (!ad) {
-      alert("Ders adı boş olamaz.");
-      return;
-    }
-    const line = saat ? `${ad} - ${saat}` : ad;
-    dersler.push(line);
-
-    document.getElementById("dersAdi").value = "";
-    document.getElementById("dersSaat").value = "";
-    renderDersler();
-  }
-
-  function dersSil(i) {
-    dersler.splice(i, 1);
-    renderDersler();
+    el.innerHTML = blocks;
   }
 
   function escapeHtml(s) {
@@ -127,15 +190,15 @@
 
   // Submitten hemen önce dersler_json doldur
   document.getElementById("frm").addEventListener("submit", function(e){
-    document.getElementById("dersler_json").value = JSON.stringify(dersler);
-    // Ders eklenmediyse uyar (istersen zorunlu yapabiliriz)
-    if (dersler.length === 0) {
+    document.getElementById("dersler_json").value = JSON.stringify(dersBloklari);
+
+    if (dersBloklari.length === 0) {
       const ok = confirm("Hiç ders eklemediniz. Yine de devam edilsin mi?");
       if (!ok) e.preventDefault();
     }
   });
 
-  renderDersler();
+  renderDersBloklari();
 </script>
 
 </body>
