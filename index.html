@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Çakışan Ders Dilekçe Formu</title>
+</head>
+<body>
+  <h2>Çakışan Ders Mazeret Dilekçesi</h2>
+
+  <form method="POST"
+        action="https://script.google.com/macros/s/AKfycbxwCeg4XdC9vfadjA-tt5WNksXNQwQ7FmUiJQFrxpRCzkDfg3JKDo7l6SmVD6CbB-AWCA/exec"
+        target="_blank">
+
+    <label>Ad:</label><br>
+    <input type="text" name="ad" required><br><br>
+
+    <label>Soyad:</label><br>
+    <input type="text" name="soyad" required><br><br>
+
+    <label>Öğrenci No:</label><br>
+    <input type="text" name="ogrno" required><br><br>
+
+    <label>Mail Kullanıcı Adı:</label><br>
+    <input type="text" name="mail"><br><br>
+
+    <label>Telefon:</label><br>
+    <input type="text" name="telefon"><br><br>
+
+    <label>Bölüm:</label><br>
+    <input type="text" name="bolum"><br><br>
+
+    <label>Açıklama:</label><br>
+    <textarea name="aciklama"></textarea><br><br>
+
+    <!-- Dersler JSON olarak gönderilecek -->
+    <input type="hidden" name="dersler_json"
+           value='["Matematik - 10:00","Fizik - 10:00"]'>
+
+    <button type="submit">Dilekçe Oluştur</button>
+
+  </form>
+</body>
+</html>
