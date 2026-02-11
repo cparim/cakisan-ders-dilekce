@@ -1,43 +1,142 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Çakışan Ders Dilekçe Formu</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 16px; max-width: 720px; margin: 0 auto; }
+    label { font-weight: 600; display:block; margin-top: 12px; }
+    input, textarea, select { width: 100%; padding: 8px; box-sizing: border-box; margin-top: 6px; }
+    .row { display:flex; gap: 10px; align-items: end; }
+    .row > div { flex: 1; }
+    .btn { padding: 10px 12px; cursor: pointer; }
+    .btn-secondary { background:#eee; border:1px solid #ccc; }
+    .btn-danger { background:#ffecec; border:1px solid #ffb3b3; }
+    .card { border:1px solid #ddd; padding: 12px; border-radius: 8px; margin-top: 12px; }
+    .small { font-size: 12px; color:#666; }
+    ul { margin: 8px 0 0 18px; }
+  </style>
 </head>
 <body>
-  <h2>Çakışan Ders Mazeret Dilekçesi</h2>
 
-  <form method="POST"
+  <h2>Çakışan Ders Mazeret Dilekçesi</h2>
+  <p class="small">Formu doldurup gönderince yeni sekmede Word dilekçeniz indirilecektir.</p>
+
+  <form id="frm"
+        method="POST"
         action="https://script.google.com/macros/s/AKfycbxwCeg4XdC9vfadjA-tt5WNksXNQwQ7FmUiJQFrxpRCzkDfg3JKDo7l6SmVD6CbB-AWCA/exec"
         target="_blank">
 
-    <label>Ad:</label><br>
-    <input type="text" name="ad" required><br><br>
+    <label>Ad</label>
+    <input type="text" name="ad" id="ad" required>
 
-    <label>Soyad:</label><br>
-    <input type="text" name="soyad" required><br><br>
+    <label>Soyad</label>
+    <input type="text" name="soyad" id="soyad" required>
 
-    <label>Öğrenci No:</label><br>
-    <input type="text" name="ogrno" required><br><br>
+    <label>Öğrenci No</label>
+    <input type="text" name="ogrno" id="ogrno" required>
 
-    <label>Mail Kullanıcı Adı:</label><br>
-    <input type="text" name="mail"><br><br>
+    <label>Mail Kullanıcı Adı (örn: abc123)</label>
+    <input type="text" name="mail" id="mail">
 
-    <label>Telefon:</label><br>
-    <input type="text" name="telefon"><br><br>
+    <label>Telefon</label>
+    <input type="text" name="telefon" id="telefon">
 
-    <label>Bölüm:</label><br>
-    <input type="text" name="bolum"><br><br>
+    <label>Bölüm</label>
+    <input type="text" name="bolum" id="bolum">
 
-    <label>Açıklama:</label><br>
-    <textarea name="aciklama"></textarea><br><br>
+    <label>Açıklama</label>
+    <textarea name="aciklama" id="aciklama" rows="4"></textarea>
 
-    <!-- Dersler JSON olarak gönderilecek -->
-    <input type="hidden" name="dersler_json"
-           value='["Matematik - 10:00","Fizik - 10:00"]'>
+    <!-- Dersler burada yönetilecek -->
+    <div class="card">
+      <h3 style="margin:0 0 8px 0;">Dersler</h3>
 
-    <button type="submit">Dilekçe Oluştur</button>
+      <div class="row">
+        <div>
+          <label style="margin-top:0;">Ders Adı</label>
+          <input type="text" id="dersAdi" placeholder="Örn: Fizik I">
+        </div>
+        <div>
+          <label style="margin-top:0;">Saat / Tarih</label>
+          <input type="text" id="dersSaat" placeholder="Örn: 10:00 / 12.02.2026">
+        </div>
+        <div style="flex:0;">
+          <button type="button" class="btn btn-secondary" onclick="dersEkle()">Ders Ekle</button>
+        </div>
+      </div>
 
+      <div id="dersListe" class="small" style="margin-top:10px;">
+        Henüz ders eklenmedi.
+      </div>
+    </div>
+
+    <!-- Apps Script bunu JSON olarak okuyacak -->
+    <input type="hidden" name="dersler_json" id="dersler_json" value="[]">
+
+    <div style="margin-top:16px;">
+      <button class="btn" type="submit">Dilekçe Oluştur</button>
+    </div>
   </form>
+
+<script>
+  const dersler = [];
+
+  function renderDersler() {
+    const el = document.getElementById("dersListe");
+    if (dersler.length === 0) {
+      el.innerHTML = "Henüz ders eklenmedi.";
+      return;
+    }
+    const items = dersler.map((d, i) =>
+      `<li>${escapeHtml(d)} <button type="button" class="btn btn-danger" onclick="dersSil(${i})">Sil</button></li>`
+    ).join("");
+    el.innerHTML = `<ul>${items}</ul>`;
+  }
+
+  function dersEkle() {
+    const ad = document.getElementById("dersAdi").value.trim();
+    const saat = document.getElementById("dersSaat").value.trim();
+
+    if (!ad) {
+      alert("Ders adı boş olamaz.");
+      return;
+    }
+    const line = saat ? `${ad} - ${saat}` : ad;
+    dersler.push(line);
+
+    document.getElementById("dersAdi").value = "";
+    document.getElementById("dersSaat").value = "";
+    renderDersler();
+  }
+
+  function dersSil(i) {
+    dersler.splice(i, 1);
+    renderDersler();
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
+  }
+
+  // Submitten hemen önce dersler_json doldur
+  document.getElementById("frm").addEventListener("submit", function(e){
+    document.getElementById("dersler_json").value = JSON.stringify(dersler);
+    // Ders eklenmediyse uyar (istersen zorunlu yapabiliriz)
+    if (dersler.length === 0) {
+      const ok = confirm("Hiç ders eklemediniz. Yine de devam edilsin mi?");
+      if (!ok) e.preventDefault();
+    }
+  });
+
+  renderDersler();
+</script>
+
 </body>
 </html>
